@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Test Engineering — Winnie Wei</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; }
+
+  .slide {
+    display: none; min-height: 100vh; padding: 60px 80px;
+    flex-direction: column; justify-content: center;
+  }
+  .slide.active { display: flex; }
+
+  h1 { font-size: 2.8em; font-weight: 700; color: #f8fafc; margin-bottom: 16px; line-height: 1.2; }
+  h2 { font-size: 1.8em; font-weight: 600; color: #38bdf8; margin-bottom: 24px; }
+  h3 { font-size: 1.3em; font-weight: 600; color: #94a3b8; margin-bottom: 12px; }
+  p, li { font-size: 1.25em; line-height: 1.6; color: #cbd5e1; }
+  ul { list-style: none; padding: 0; }
+  li { padding: 8px 0; padding-left: 28px; position: relative; }
+  li::before { content: "→"; position: absolute; left: 0; color: #38bdf8; font-weight: bold; }
+
+  .highlight { color: #fbbf24; font-weight: 600; }
+  .dim { color: #64748b; }
+  .tag { display: inline-block; background: #1e3a5f; color: #38bdf8; padding: 4px 14px; border-radius: 6px; font-size: 0.85em; margin: 4px; font-weight: 500; }
+  .tag.green { background: #14532d; color: #4ade80; }
+  .tag.yellow { background: #422006; color: #fbbf24; }
+  .tag.red { background: #450a0a; color: #f87171; }
+
+  .grid { display: grid; gap: 24px; margin-top: 20px; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 28px; }
+  .card h3 { color: #38bdf8; margin-bottom: 8px; }
+
+  pre { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 20px; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.95em; overflow-x: auto; margin: 16px 0; color: #e2e8f0; line-height: 1.5; }
+  code { font-family: 'JetBrains Mono', 'Fira Code', monospace; color: #38bdf8; }
+
+  .pipeline { display: flex; align-items: center; gap: 12px; margin: 24px 0; flex-wrap: wrap; }
+  .pipeline-stage { background: #1e293b; border: 2px solid #334155; border-radius: 10px; padding: 16px 24px; text-align: center; min-width: 140px; }
+  .pipeline-stage.active-stage { border-color: #38bdf8; }
+  .pipeline-arrow { color: #38bdf8; font-size: 1.5em; }
+  .pipeline-stage .stage-name { font-weight: 600; font-size: 1.1em; color: #f8fafc; }
+  .pipeline-stage .stage-detail { font-size: 0.85em; color: #94a3b8; margin-top: 4px; }
+
+  .stat-row { display: flex; gap: 32px; margin: 20px 0; }
+  .stat { text-align: center; }
+  .stat-num { font-size: 3em; font-weight: 700; color: #38bdf8; }
+  .stat-label { font-size: 0.95em; color: #94a3b8; margin-top: 4px; }
+
+  .quote { border-left: 4px solid #38bdf8; padding: 16px 24px; margin: 20px 0; background: #1e293b; border-radius: 0 8px 8px 0; font-style: italic; font-size: 1.15em; }
+
+  .nav { position: fixed; bottom: 20px; right: 30px; display: flex; gap: 8px; z-index: 100; }
+  .nav button { background: #334155; color: #e2e8f0; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-size: 1em; }
+  .nav button:hover { background: #475569; }
+  .page-num { position: fixed; bottom: 24px; left: 30px; color: #475569; font-size: 0.9em; }
+
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+  th { text-align: left; padding: 12px 16px; background: #1e293b; color: #38bdf8; font-weight: 600; border-bottom: 2px solid #334155; }
+  td { padding: 12px 16px; border-bottom: 1px solid #1e293b; color: #cbd5e1; }
+  tr:hover td { background: #1e293b44; }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1: Title -->
+<div class="slide active" id="s1">
+  <h1>Scalable API Test Engineering</h1>
+  <h2>pytest + CI/CD + AI-Driven Workflows</h2>
+  <p style="margin-top: 32px; font-size: 1.1em; color: #94a3b8;">Winnie Wei &nbsp;·&nbsp; Lead Software Test Engineer</p>
+  <div style="margin-top: 40px;">
+    <span class="tag">pytest</span>
+    <span class="tag">REST API</span>
+    <span class="tag">CI/CD</span>
+    <span class="tag">Non-Functional</span>
+    <span class="tag">AI-Driven QA</span>
+    <span class="tag">Postman</span>
+  </div>
+</div>
+
+<!-- SLIDE 2: Architecture -->
+<div class="slide" id="s2">
+  <h2>Layered Test Architecture</h2>
+  <div class="stat-row">
+    <div class="stat"><div class="stat-num">51</div><div class="stat-label">Tests</div></div>
+    <div class="stat"><div class="stat-num">4</div><div class="stat-label">Test Layers</div></div>
+    <div class="stat"><div class="stat-num">30</div><div class="stat-label">Requirements Traced</div></div>
+    <div class="stat"><div class="stat-num">3</div><div class="stat-label">CI Stages</div></div>
+  </div>
+  <div class="grid grid-2" style="margin-top: 20px;">
+    <div class="card">
+      <h3>Test Layers</h3>
+      <ul>
+        <li><span class="highlight">Smoke (6)</span> — Is the API alive? Auth works? Basic CRUD?</li>
+        <li><span class="highlight">Regression (25)</span> — Full lifecycle, negative cases, data variations, filtering</li>
+        <li><span class="highlight">Contract (3)</span> — Pydantic schema validation (catches field drift)</li>
+        <li><span class="highlight">Non-Functional (14)</span> — Response time P95, concurrency, security, resilience</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Engineering Patterns</h3>
+      <ul>
+        <li>API client class — tests never call <code>requests</code> directly</li>
+        <li>Data factory — randomised, parallel-safe, no shared state</li>
+        <li>Yield fixtures — guaranteed cleanup on pass or fail</li>
+        <li>Environment config — <code>.env</code> + <code>--env</code> flag for multi-env</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: CI Pipeline -->
+<div class="slide" id="s3">
+  <h2>CI/CD Pipeline</h2>
+  <div class="pipeline">
+    <div class="pipeline-stage active-stage">
+      <div class="stage-name">Smoke</div>
+      <div class="stage-detail">Gate · 6 tests</div>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-stage active-stage">
+      <div class="stage-name">Regression</div>
+      <div class="stage-detail">+ Contract · 25 tests</div>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-stage active-stage">
+      <div class="stage-name">Non-Functional</div>
+      <div class="stage-detail">Perf + Security · 14 tests</div>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-stage">
+      <div class="stage-name">Coherency</div>
+      <div class="stage-detail">Coverage gaps</div>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-stage">
+      <div class="stage-name">Report</div>
+      <div class="stage-detail">PR comments</div>
+    </div>
+  </div>
+  <div class="grid grid-3" style="margin-top: 24px;">
+    <div class="card">
+      <h3>Speed</h3>
+      <ul>
+        <li>Parallel execution <code>-n auto</code></li>
+        <li>Pip caching</li>
+        <li>Smoke gates everything</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Reliability</h3>
+      <ul>
+        <li>Flake retry <code>--reruns 2</code></li>
+        <li>Timeout enforcement <code>--timeout=30</code></li>
+        <li>Strict markers</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Observability</h3>
+      <ul>
+        <li>JUnit XML artifacts</li>
+        <li>HTML reports</li>
+        <li>PR test result comments</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4: Flaky Test Story -->
+<div class="slide" id="s4">
+  <h2>Flaky Test Debugging — The Story</h2>
+  <p class="dim" style="margin-bottom: 20px;">Git history tells the journey: introduce anti-patterns → diagnose → fix</p>
+  <table>
+    <tr>
+      <th>Anti-Pattern</th>
+      <th>Why It Flakes</th>
+      <th>Fix</th>
+    </tr>
+    <tr>
+      <td><span class="tag red">Race Condition</span><br>Create → immediate GET</td>
+      <td>Eventual consistency — data not queryable yet</td>
+      <td>Retry/poll with backoff</td>
+    </tr>
+    <tr>
+      <td><span class="tag red">Shared State</span><br>Module-level global variable</td>
+      <td>Breaks with parallel execution or random order</td>
+      <td>Per-test fixture isolation</td>
+    </tr>
+    <tr>
+      <td><span class="tag red">Timing Assertion</span><br><code>assert elapsed < 500ms</code></td>
+      <td>Network jitter, CI runner contention</td>
+      <td>Multi-sample P95 statistical approach</td>
+    </tr>
+  </table>
+  <div class="quote" style="margin-top: 24px;">
+    "Reruns are a safety net, not a solution. If a test reruns in >20% of builds, it needs fixing — not more reruns."
+  </div>
+</div>
+
+<!-- SLIDE 5: Coherency Check -->
+<div class="slide" id="s5">
+  <h2>Coherency Check — What You're NOT Testing</h2>
+  <p class="dim" style="margin-bottom: 20px;">The most dangerous test suite passes 100% and gives you false confidence.</p>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Layer 1: Structural (Automated)</h3>
+      <pre>$ python tools/coherency_check.py
+
+Requirements: 30 total, 25 covered, 5 gaps
+Test mappings: 39
+Violations: 0 errors, 3 warnings
+
+[p1_gap] GAP-001: Webhook delivery
+[p1_gap] GAP-002: Idempotency
+[p1_gap] GAP-004: Multi-tenant isolation</pre>
+      <ul style="margin-top: 12px;">
+        <li>Runs in CI on every PR</li>
+        <li>Catches missing files, orphaned tests, marker drift</li>
+        <li>Machine-readable JSON output</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Layer 2: Semantic (AI-Assisted)</h3>
+      <ul>
+        <li><span class="highlight">Assertion quality</span> — does the test actually validate intent?</li>
+        <li><span class="highlight">Negative case coverage</span> — P1 reqs have both happy + failure paths?</li>
+        <li><span class="highlight">Contract drift</span> — Pydantic model vs live API shape</li>
+        <li><span class="highlight">Data isolation</span> — no shared state, no order dependency</li>
+      </ul>
+      <p style="margin-top: 12px; font-size: 0.95em;">Invoked via <code>/test-coherency</code> Claude Code skill</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6: AI-Driven QA -->
+<div class="slide" id="s6">
+  <h2>AI-Driven QA — Not Just Code Generation</h2>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>What AI Does</h3>
+      <ul>
+        <li><span class="highlight">Requirements → Test Specs</span> — parse Jira/specs, derive scenarios with traceability</li>
+        <li><span class="highlight">Test Code Generation</span> — follows existing patterns (fixtures, factories, markers)</li>
+        <li><span class="highlight">Coherency Checking</span> — semantic review of test quality</li>
+        <li><span class="highlight">Code Review</span> — flag flaky patterns, missing cleanup, weak assertions</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>What Humans Do</h3>
+      <ul>
+        <li><span class="highlight">Risk prioritisation</span> — which P1 gaps matter most?</li>
+        <li><span class="highlight">Coverage scope</span> — what NOT to test</li>
+        <li><span class="highlight">Domain judgment</span> — insurance-specific edge cases</li>
+        <li><span class="highlight">Strategy</span> — test architecture decisions</li>
+      </ul>
+    </div>
+  </div>
+  <div class="quote" style="margin-top: 24px;">
+    "I've built 20+ custom AI skills for test engineering — test plans from Jira Epics, Jira card creation, coherency checking. AI accelerates the systematic work. The engineer makes the judgment calls."
+  </div>
+</div>
+
+<!-- SLIDE 7: What I'd Build at CG -->
+<div class="slide" id="s7">
+  <h2>What I'd Build at Cover Genius</h2>
+  <div class="grid grid-3">
+    <div class="card">
+      <h3>Immediate</h3>
+      <ul>
+        <li>XCover policy lifecycle E2E</li>
+        <li>Partner integration contract tests</li>
+        <li>Auth & multi-tenant isolation</li>
+        <li>Coherency checking across repos</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Scale</h3>
+      <ul>
+        <li>Multi-currency / locale matrix</li>
+        <li>Webhook delivery verification</li>
+        <li>Performance baselines per partner</li>
+        <li>Claims pipeline E2E</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Team</h3>
+      <ul>
+        <li>AI skills for the whole QA team</li>
+        <li>Junior onboarding via patterns</li>
+        <li>Coverage gap dashboards</li>
+        <li>Flake rate tracking & SLAs</li>
+      </ul>
+    </div>
+  </div>
+  <div style="margin-top: 40px;">
+    <p style="font-size: 1.1em; color: #94a3b8;">
+      The patterns scale — 60+ countries, 50+ currencies, N partner integrations.
+      <br>The architecture stays the same: layered tests, coherency checks, AI-assisted workflows.
+    </p>
+  </div>
+</div>
+
+<!-- Navigation -->
+<div class="nav">
+  <button onclick="prev()">← Prev</button>
+  <button onclick="next()">Next →</button>
+</div>
+<div class="page-num" id="pageNum">1 / 7</div>
+
+<script>
+  let current = 0;
+  const slides = document.querySelectorAll('.slide');
+  const pageNum = document.getElementById('pageNum');
+
+  function show(n) {
+    slides[current].classList.remove('active');
+    current = (n + slides.length) % slides.length;
+    slides[current].classList.add('active');
+    pageNum.textContent = `${current + 1} / ${slides.length}`;
+  }
+  function next() { show(current + 1); }
+  function prev() { show(current - 1); }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+  });
+</script>
+</body>
+</html>

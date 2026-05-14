@@ -58,6 +58,21 @@ pytest --env=staging -m smoke # target environment
 
 Features: pip caching, parallel execution (`pytest-xdist`), flake management (`pytest-rerunfailures`), JUnit XML reports, test result PR comments via `dorny/test-reporter`.
 
+## Coherency Check System
+
+`coverage/matrix.yaml` is the single source of truth for requirement → test → CI traceability.
+
+```bash
+python tools/coherency_check.py              # structural checks (text)
+python tools/coherency_check.py --format json # machine-readable
+python tools/coherency_check.py --strict      # fail on warnings too
+```
+
+**Structural checks** (automated, runs in CI): missing test files, orphaned tests, marker mismatches, P1 gaps.
+**Semantic checks** (AI-assisted, via `/test-coherency` skill): assertion quality, negative case coverage, contract drift, data isolation anti-patterns.
+
+IMPORTANT: After adding or removing test files, update `coverage/matrix.yaml` to keep the coherency check accurate.
+
 ## Coding Conventions
 
 - **Class-based tests** — group related tests in classes with descriptive docstrings
