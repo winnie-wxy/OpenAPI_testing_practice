@@ -1,8 +1,5 @@
 import pytest
-from src.api.booking_client import BookingClient
 from src.utils.data_factory import build_booking_payload
-
-BASE_URL = "https://restful-booker.herokuapp.com"
 
 
 @pytest.mark.regression
