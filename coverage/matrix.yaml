@@ -1,0 +1,337 @@
+# Test Coverage Traceability Matrix
+#
+# Maps requirements → test scenarios → test files → CI jobs.
+# Used by tools/coherency_check.py to detect gaps and drift.
+#
+# Status values:
+#   covered    — requirement has passing tests
+#   gap        — requirement exists but no test covers it
+#   partial    — some scenarios tested, others missing
+#   stale      — test exists but may not reflect current API behavior
+
+requirements:
+
+  # --- Core Functional Requirements ---
+
+  REQ-001:
+    description: "Health check endpoint returns status 201"
+    priority: P1
+    tests:
+      - file: tests/smoke/test_health.py
+        function: TestHealthCheck::test_ping_returns_201
+        ci_job: smoke
+    status: covered
+
+  REQ-002:
+    description: "Authenticate partners via username/password and return session token"
+    priority: P1
+    tests:
+      - file: tests/smoke/test_auth.py
+        function: TestAuth::test_valid_credentials_returns_token
+        ci_job: smoke
+    status: covered
+
+  REQ-003:
+    description: "Reject authentication with invalid credentials"
+    priority: P1
+    tests:
+      - file: tests/smoke/test_auth.py
+        function: TestAuth::test_invalid_credentials_rejected
+        ci_job: smoke
+    status: covered
+
+  REQ-004:
+    description: "Allow authenticated partners to create a booking"
+    priority: P1
+    tests:
+      - file: tests/smoke/test_create_booking.py
+        function: TestCreateBooking::test_create_booking_returns_id
+        ci_job: smoke
+      - file: tests/smoke/test_create_booking.py
+        function: TestCreateBooking::test_created_booking_matches_payload
+        ci_job: smoke
+      - file: tests/regression/test_booking_parametrize.py
+        function: TestCreateBookingVariations::test_create_booking_with_varied_data
+        ci_job: regression
+      - file: tests/regression/test_booking_parametrize.py
+        function: TestCreateBookingVariations::test_create_booking_deposit_status
+        ci_job: regression
+    status: covered
+
+  REQ-005:
+    description: "Return created booking with a unique booking ID"
+    priority: P1
+    tests:
+      - file: tests/smoke/test_create_booking.py
+        function: TestCreateBooking::test_create_booking_returns_id
+        ci_job: smoke
+      - file: tests/contract/test_booking_schema.py
+        function: TestBookingResponseSchema::test_create_booking_response_matches_schema
+        ci_job: regression
+    status: covered
+
+  REQ-006:
+    description: "Allow retrieval of a booking by ID"
+    priority: P1
+    tests:
+      - file: tests/smoke/test_create_booking.py
+        function: TestCreateBooking::test_get_booking_after_create
+        ci_job: smoke
+      - file: tests/contract/test_booking_schema.py
+        function: TestBookingResponseSchema::test_get_booking_response_matches_schema
+        ci_job: regression
+    status: covered
+
+  REQ-007:
+    description: "Allow full update (PUT) of a booking by authenticated partner"
+    priority: P2
+    tests:
+      - file: tests/regression/test_booking_lifecycle.py
+        function: TestBookingLifecycle::test_full_crud_lifecycle
+        ci_job: regression
+    status: covered
+
+  REQ-008:
+    description: "Allow partial update (PATCH) of a booking by authenticated partner"
+    priority: P2
+    tests:
+      - file: tests/regression/test_booking_lifecycle.py
+        function: TestBookingLifecycle::test_full_crud_lifecycle
+        ci_job: regression
+    status: covered
+
+  REQ-009:
+    description: "Allow deletion of a booking by authenticated partner"
+    priority: P1
+    tests:
+      - file: tests/regression/test_booking_lifecycle.py
+        function: TestBookingLifecycle::test_full_crud_lifecycle
+        ci_job: regression
+    status: covered
+
+  REQ-010:
+    description: "Return 404 for non-existent booking IDs"
+    priority: P2
+    tests:
+      - file: tests/regression/test_booking_negative.py
+        function: TestNotFound::test_get_nonexistent_booking_returns_404
+        ci_job: regression
+    status: covered
+
+  REQ-011:
+    description: "Reject update/delete from unauthenticated requests (403)"
+    priority: P1
+    tests:
+      - file: tests/regression/test_booking_negative.py
+        function: TestUnauthorizedAccess::test_update_without_auth_returns_403
+        ci_job: regression
+      - file: tests/regression/test_booking_negative.py
+        function: TestUnauthorizedAccess::test_delete_without_auth_returns_403
+        ci_job: regression
+    status: covered
+
+  REQ-011b:
+    description: "Data reads are consistent after writes (eventual consistency handling)"
+    priority: P2
+    tests:
+      - file: tests/regression/test_booking_flaky.py
+        function: TestFixedRaceCondition::test_create_and_verify_with_polling
+        ci_job: regression
+      - file: tests/regression/test_booking_flaky.py
+        function: TestFixedIsolatedState::test_create_and_read_booking_isolated
+        ci_job: regression
+      - file: tests/regression/test_booking_flaky.py
+        function: TestFixedIsolatedState::test_another_isolated_booking
+        ci_job: regression
+      - file: tests/regression/test_booking_flaky.py
+        function: TestFixedTimingAssertion::test_response_time_p95_under_threshold
+        ci_job: regression
+    status: covered
+
+  REQ-012:
+    description: "Handle concurrent booking creation without data corruption"
+    priority: P2
+    tests:
+      - file: tests/nonfunctional/test_concurrent_requests.py
+        function: TestConcurrentRequests::test_concurrent_booking_creation
+        ci_job: nonfunctional
+      - file: tests/nonfunctional/test_concurrent_requests.py
+        function: TestConcurrentRequests::test_concurrent_read_operations
+        ci_job: nonfunctional
+    status: covered
+
+  REQ-013:
+    description: "API responds within 2000ms (P95) for all endpoints"
+    priority: P2
+    tests:
+      - file: tests/nonfunctional/test_response_time.py
+        function: TestResponseTime::test_health_check_response_time
+        ci_job: nonfunctional
+      - file: tests/nonfunctional/test_response_time.py
+        function: TestResponseTime::test_get_booking_response_time
+        ci_job: nonfunctional
+      - file: tests/nonfunctional/test_response_time.py
+        function: TestResponseTime::test_create_booking_response_time
+        ci_job: nonfunctional
+    status: covered
+
+  REQ-014:
+    description: "Handle invalid input gracefully (no 500 errors)"
+    priority: P2
+    tests:
+      - file: tests/regression/test_booking_negative.py
+        function: TestCreateBookingValidation::test_create_with_invalid_data
+        ci_job: regression
+    status: covered
+
+  # --- Non-Functional Requirements ---
+
+  NFR-001:
+    description: "API response time P95 < 2000ms under normal load"
+    priority: P2
+    tests:
+      - file: tests/nonfunctional/test_response_time.py
+        function: TestResponseTime::test_response_times_summary
+        ci_job: nonfunctional
+    status: covered
+
+  NFR-002:
+    description: "Handle 10 concurrent requests without 5xx errors"
+    priority: P2
+    tests:
+      - file: tests/nonfunctional/test_concurrent_requests.py
+        function: TestConcurrentRequests::test_concurrent_booking_creation
+        ci_job: nonfunctional
+    status: covered
+
+  NFR-003:
+    description: "API does not crash on SQL injection payloads"
+    priority: P1
+    tests:
+      - file: tests/nonfunctional/test_security_smoke.py
+        function: TestSecuritySmoke::test_sql_injection_in_booking_fields
+        ci_job: nonfunctional
+    status: covered
+
+  NFR-004:
+    description: "API does not crash on XSS payloads"
+    priority: P2
+    tests:
+      - file: tests/nonfunctional/test_security_smoke.py
+        function: TestSecuritySmoke::test_xss_in_booking_fields
+        ci_job: nonfunctional
+    status: covered
+
+  NFR-005:
+    description: "API handles oversized payloads gracefully"
+    priority: P3
+    tests:
+      - file: tests/nonfunctional/test_security_smoke.py
+        function: TestSecuritySmoke::test_oversized_payload
+        ci_job: nonfunctional
+    status: covered
+
+  NFR-006:
+    description: "Client handles connection failures gracefully"
+    priority: P2
+    tests:
+      - file: tests/nonfunctional/test_resilience.py
+        function: TestResilience::test_connection_to_invalid_host_raises
+        ci_job: nonfunctional
+      - file: tests/nonfunctional/test_resilience.py
+        function: TestResilience::test_request_timeout_handling
+        ci_job: nonfunctional
+      - file: tests/nonfunctional/test_resilience.py
+        function: TestResilience::test_malformed_url_handling
+        ci_job: nonfunctional
+    status: covered
+
+  NFR-007:
+    description: "Auth bypass with empty/invalid token returns 401/403"
+    priority: P1
+    tests:
+      - file: tests/nonfunctional/test_security_smoke.py
+        function: TestSecuritySmoke::test_auth_bypass_with_empty_token
+        ci_job: nonfunctional
+    status: covered
+
+  # --- Contract Requirements ---
+
+  CTR-001:
+    description: "Create booking response matches expected schema"
+    priority: P1
+    tests:
+      - file: tests/contract/test_booking_schema.py
+        function: TestBookingResponseSchema::test_create_booking_response_matches_schema
+        ci_job: regression
+    status: covered
+
+  CTR-002:
+    description: "Get booking response matches expected schema"
+    priority: P1
+    tests:
+      - file: tests/contract/test_booking_schema.py
+        function: TestBookingResponseSchema::test_get_booking_response_matches_schema
+        ci_job: regression
+    status: covered
+
+  CTR-003:
+    description: "Schema validation detects invalid response shapes"
+    priority: P2
+    tests:
+      - file: tests/contract/test_booking_schema.py
+        function: TestBookingResponseSchema::test_invalid_response_shape_detected
+        ci_job: regression
+    status: covered
+
+  # --- Known Gaps (requirements without test coverage) ---
+
+  GAP-001:
+    description: "Webhook delivery for booking status changes"
+    priority: P1
+    tests: []
+    status: gap
+    notes: "API does not support webhooks — future feature"
+
+  GAP-002:
+    description: "Idempotency for duplicate booking creation requests"
+    priority: P1
+    tests: []
+    status: gap
+    notes: "API has no idempotency key support"
+
+  GAP-003:
+    description: "Rate limiting for excessive API requests"
+    priority: P2
+    tests: []
+    status: gap
+    notes: "No rate limiting headers observed"
+
+  GAP-004:
+    description: "Multi-tenant data isolation between partners"
+    priority: P1
+    tests: []
+    status: gap
+    notes: "Public test API has no tenant concept"
+
+  GAP-005:
+    description: "Pagination for list bookings endpoint"
+    priority: P2
+    tests: []
+    status: gap
+    notes: "API returns all bookings — no pagination support observed"
+
+# CI job → marker mapping (used by coherency check)
+ci_jobs:
+  smoke:
+    marker: smoke
+    gate: true
+    description: "Health check, auth, basic CRUD"
+  regression:
+    marker: "regression or contract"
+    gate: true
+    description: "Full CRUD lifecycle, negative tests, contract validation"
+  nonfunctional:
+    marker: nonfunctional
+    gate: false
+    description: "Performance, concurrency, resilience, security"

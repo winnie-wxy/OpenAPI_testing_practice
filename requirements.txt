@@ -6,3 +6,4 @@ python-dotenv==1.1.0
 pytest-xdist==3.5.0
 pytest-rerunfailures==14.0
 pytest-timeout==2.3.1
+pyyaml==6.0.2

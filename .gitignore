@@ -5,3 +5,4 @@ venv/
 .env
 reports/
 *.egg-info/
+coverage/coherency_report.json

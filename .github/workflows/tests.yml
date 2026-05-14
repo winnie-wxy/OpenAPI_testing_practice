@@ -97,6 +97,24 @@ jobs:
           name: nonfunctional-report
           path: reports/
 
+  coherency:
+    name: Coherency Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install pyyaml
+      - run: python tools/coherency_check.py
+      - run: python tools/coherency_check.py --format json > reports/coherency.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coherency-report
+          path: reports/coherency.json
+
   test-results:
     name: Publish Test Results
     needs: [smoke, regression, nonfunctional]
