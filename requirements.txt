@@ -3,3 +3,6 @@ pytest==8.3.4
 pytest-html==4.1.1
 pydantic==2.11.1
 python-dotenv==1.1.0
+pytest-xdist==3.5.0
+pytest-rerunfailures==14.0
+pytest-timeout==2.3.1

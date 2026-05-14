@@ -15,8 +15,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
       - run: pip install -r requirements.txt
-      - run: pytest -m smoke --html=reports/smoke.html --self-contained-html
+      - run: >-
+          pytest -m smoke
+          -n auto
+          --reruns 2
+          --junitxml=reports/smoke-results.xml
+          --html=reports/smoke.html --self-contained-html
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -32,10 +38,38 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
       - run: pip install -r requirements.txt
-      - run: pytest -m "regression or contract" --html=reports/regression.html --self-contained-html
+      - run: >-
+          pytest -m "regression or contract"
+          -n auto
+          --reruns 2
+          --junitxml=reports/regression-results.xml
+          --html=reports/regression.html --self-contained-html
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: regression-report
+          path: reports/
+
+  nonfunctional:
+    name: Non-Functional Tests
+    needs: regression
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: >-
+          pytest -m nonfunctional
+          --reruns 2
+          --junitxml=reports/nonfunctional-results.xml
+          --html=reports/nonfunctional.html --self-contained-html
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nonfunctional-report
           path: reports/
