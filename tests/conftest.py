@@ -57,3 +57,23 @@ def client(base_url, auth_token):
 def unauth_client(base_url):
     """Client without auth token — for testing unauthorized access."""
     return BookingClient(base_url)
+
+
+@pytest.fixture
+def created_booking(client):
+    """Create a booking and guarantee cleanup after the test.
+
+    Yields (booking_id, payload) so tests can use both.
+    Teardown deletes the booking regardless of test outcome.
+    """
+    from src.utils.data_factory import build_booking_payload
+
+    payload = build_booking_payload()
+    response = client.create_booking(payload)
+    assert response.status_code == 200, f"Setup failed: {response.text}"
+    booking_id = response.json()["bookingid"]
+
+    yield booking_id, payload
+
+    # Teardown: delete the booking (ignore 404 if test already deleted it)
+    client.delete_booking(booking_id)
