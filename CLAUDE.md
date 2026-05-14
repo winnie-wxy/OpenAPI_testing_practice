@@ -76,7 +76,7 @@ Features: pip caching, parallel execution (`pytest-xdist`), flake management (`p
 
 # Claude Code Usage Strategy
 
-This section documents how Claude Code is used in this project and across Harrison.ai's test engineering practice. It demonstrates the AI-driven QA leadership approach — not just using AI tools, but configuring and optimising them for team-wide productivity.
+This section documents how I use Claude Code effectively — not just as a code generator, but as a configurable AI engineering tool. The patterns below are drawn from my experience managing multi-repo test platforms with 20+ skills, multiple MCP servers, and team-wide AI workflows.
 
 ## CLAUDE.md Design Philosophy
 
@@ -106,12 +106,14 @@ CLAUDE.md is the most important file for AI-assisted development. Every line is 
 ./subdir/CLAUDE.md             # Subdirectory-specific — loaded when working in that directory
 ```
 
-**Why this matters:** Global CLAUDE.md carries your identity, team, and credentials across all repos. Project CLAUDE.md is shared via git so the whole team benefits. Subdirectory CLAUDE.md keeps specialised context (e.g., Playwright POM patterns) out of the root file.
+**Why this matters:** Global CLAUDE.md carries your identity and credentials across all repos. Project CLAUDE.md is shared via git so the whole team benefits. Subdirectory CLAUDE.md keeps specialised context out of the root file.
 
-**Real-world example from Harrison.ai:**
-- `platform-testops/CLAUDE.md` — monorepo root, references subdirectory CLAUDE.md files
-- `platform-testops/frontend_test/CLAUDE.md` — Playwright-specific: POM hierarchy, locator conventions, MCP server setup
-- `platform-testops/performance_load_tests/CLAUDE.md` — Locust-specific: TAT analysis patterns, GHA workflows
+**Monorepo pattern:** In a test platform monorepo, I use subdirectory CLAUDE.md files to scope context:
+- Root CLAUDE.md — shared library, architecture overview, subdirectory references
+- `frontend_test/CLAUDE.md` — Playwright-specific: POM hierarchy, locator conventions, MCP setup
+- `performance_tests/CLAUDE.md` — Locust-specific: TAT analysis patterns, GHA workflows
+
+This way Claude only loads the Playwright context when I'm working in `frontend_test/`, not when I'm writing performance tests.
 
 ## Skills: On-Demand Workflows (Not Always-Loaded Context)
 
@@ -136,20 +138,19 @@ CLAUDE.md is the most important file for AI-assisted development. Every line is 
 
 **Anti-pattern:** Putting your entire test plan template, Jira card creation instructions, and PR review workflow in CLAUDE.md. This wastes tokens on every session where you're just writing tests.
 
-### Skills in Production (Harrison.ai Examples)
+### Skills I've Built and Use in Production
 
-**11 skills in platform-testops:**
-- `generate-test-plan` (v2.0) — generates test plans from Jira Epics, Confluence pages, or local specs. Supports SaMD and NMD compliance styles. Multi-step: gathers sources via AskUserQuestion → analyses requirements → generates plan with traceability.
+**Test engineering skills (11 across my test platform):**
+- `generate-test-plan` (v2.0) — generates test plans from Jira Epics, Confluence pages, or local specs. Supports both SaMD and NMD compliance styles. Multi-step: gathers sources via AskUserQuestion → analyses requirements → generates plan with traceability.
 - `generate-test-card` (v2.1) — creates/updates Jira Test cards with smart linking. Enforces mandatory human review before committing to Jira.
 - `container-samd-test-plan` — IEC 62304 V&V test plans with cross-repo impact analysis and Jama SR traceability.
-- `jama-create-testcase` — creates Jama TCs via REST API, captures MRA-VER-XXXX IDs for downstream traceability.
 
-**13 skills in hai-spec (orchestration hub):**
-- OpenSpec lifecycle skills: `explore`, `apply`, `verify`, `archive`, `sync`
-- `/hai:query` — MANDATORY for all codebase questions (enforces consistent query routing across 22 repos)
-- `/hai-create-cards` — breaks implementation into Jira cards from design specs
+**Orchestration skills (13 across an OpenSpec-driven platform):**
+- Artifact lifecycle: `explore`, `apply`, `verify`, `archive`, `sync`
+- Mandatory query routing — all codebase questions go through a single skill to enforce consistent patterns across 22 repos
+- Card generation — breaks implementation into Jira cards from design specs
 
-**Key design principle:** Each skill has a SKILL.md metadata file and a corresponding command .md for documentation. Skills accept `$ARGUMENTS` for parameterisation (e.g., `/generate-test-plan EPIC-1234`).
+**Key design principle:** Each skill has a SKILL.md metadata file. Skills accept `$ARGUMENTS` for parameterisation (e.g., `/generate-test-plan EPIC-1234`). Use `disable-model-invocation: true` for workflows with side effects that should only trigger manually.
 
 ## MCP Server Strategy: Load What You Need
 
@@ -163,15 +164,16 @@ Tool search is enabled by default. At session start, only tool **names** are loa
 
 | Use MCP Server | Use CLI Instead |
 |----------------|-----------------|
-| Playwright browser inspection (live Viewer testing) | GitHub (`gh` CLI is more efficient) |
+| Playwright browser inspection (live element testing) | GitHub (`gh` CLI is more efficient) |
 | Codebase-wide structural search (`codebase-memory`) | Simple file search (built-in Glob/Grep) |
 | Atlassian API (Jira/Confluence read/write) | AWS operations (`aws` CLI) |
-| Custom orchestration tools (`hai-tools`) | Git operations (built-in) |
+| Custom orchestration tools | Git operations (built-in) |
 
-**Harrison.ai examples:**
-- `platform-testops/.mcp.json` — only Playwright MCP (for live Viewer element inspection during test development)
-- `hai-spec/.mcp.json` — three servers: `hai-tools` (orchestration), `codebase-memory` (structural search), `atlassian` (Jira/Confluence)
-- `annalise-v2` — no MCP servers (uses CLI tools and built-in search)
+**What I've found works:**
+- Simple API test projects (like this one) — no MCP servers needed. Built-in tools + CLI cover everything.
+- Playwright E2E repos — Playwright MCP for live element inspection during test development.
+- Multi-repo orchestration platforms — custom MCP servers for structural code search, plus Atlassian MCP for Jira/Confluence.
+- Most repos — no MCP servers. Don't add them unless you have a clear use case.
 
 ### Configuration
 
@@ -254,26 +256,26 @@ Session 1: Write tests + fix CI + review PR + update docs (context fills up, qua
 }
 ```
 
-**Harrison.ai examples:**
-- `hai-spec` — explicit deny list: `Read(.env*)`, `Bash(rm -rf*)`
-- `platform-testops` — 106 allow entries (comprehensive but specific — each tool/command is individually permitted)
-- `annalise-v2` — only 5 allow entries (minimal — `gh pr view`, `gh pr diff`, Jira read)
+**Scaling permissions across repos:**
+- High-trust repos (your own test platform): comprehensive allow list — individually permit each tool/command
+- Low-trust repos (third-party, new repos): minimal — only `gh pr view`, `gh pr diff`, read-only access
+- All repos: explicit deny for `.env*` reads and destructive commands
 
 **Principle:** Start restrictive, add permissions as needed. Per-repo settings allow different trust levels for different codebases.
 
 ## Hooks: Automated Guardrails
 
-Hooks run shell commands in response to Claude Code events. Example from hai-spec:
+Hooks run shell commands in response to Claude Code events:
 
 ```jsonc
 // .claude/settings.json
 {
   "hooks": {
     "UserPromptSubmit": [
-      { "command": "./scripts/worktree-transcript-fix.sh pre" }
+      { "command": "./scripts/pre-prompt-check.sh" }
     ],
     "Stop": [
-      { "command": "./scripts/worktree-transcript-fix.sh post" }
+      { "command": "./scripts/post-session-cleanup.sh" }
     ]
   }
 }
@@ -281,7 +283,7 @@ Hooks run shell commands in response to Claude Code events. Example from hai-spe
 
 **Use cases:**
 - Auto-cleanup git worktrees before/after prompts
-- Pre-process data before Claude reads it (reduce context consumption)
+- Pre-process data before Claude reads it (grep for errors in a 10K-line log → feed only matching lines, saving thousands of tokens)
 - Enforce linting or formatting after code changes
 - Log session activity for audit trails
 
@@ -301,7 +303,7 @@ When compacting, always preserve:
 ## What This Project Demonstrates
 
 This CLAUDE.md itself is a demonstration of the principles:
-- **Concise project context** (architecture, test commands, conventions) — always loaded
-- **No bloat** — specialised workflows belong in Skills, not here
+- **Concise project context** (architecture, test commands, conventions) — always loaded, no bloat
+- **Specialised workflows belong in Skills** — not in always-loaded CLAUDE.md
 - **AI usage strategy documented** — shows how a senior/lead QA engineer configures and optimises AI tooling for team-wide productivity
-- **Real-world patterns from production** — not theoretical, drawn from Harrison.ai's 22-repo platform
+- **Patterns drawn from production** — multi-repo test platforms, 20+ custom skills, MCP server management, token-efficient workflows
