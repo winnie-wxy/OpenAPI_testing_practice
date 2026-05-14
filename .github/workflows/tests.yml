@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 jobs:
   smoke:
     name: Smoke Tests
@@ -23,6 +28,12 @@ jobs:
           --reruns 2
           --junitxml=reports/smoke-results.xml
           --html=reports/smoke.html --self-contained-html
+      - uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Smoke Test Results
+          path: reports/smoke-results.xml
+          reporter: java-junit
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -46,6 +57,12 @@ jobs:
           --reruns 2
           --junitxml=reports/regression-results.xml
           --html=reports/regression.html --self-contained-html
+      - uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Regression Test Results
+          path: reports/regression-results.xml
+          reporter: java-junit
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -68,8 +85,31 @@ jobs:
           --reruns 2
           --junitxml=reports/nonfunctional-results.xml
           --html=reports/nonfunctional.html --self-contained-html
+      - uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Non-Functional Test Results
+          path: reports/nonfunctional-results.xml
+          reporter: java-junit
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: nonfunctional-report
           path: reports/
+
+  test-results:
+    name: Publish Test Results
+    needs: [smoke, regression, nonfunctional]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: "*-report"
+          merge-multiple: true
+          path: reports/
+      - uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: reports/*-results.xml
+          comment_title: "Test Results Summary"
+          check_name: "Test Results"
