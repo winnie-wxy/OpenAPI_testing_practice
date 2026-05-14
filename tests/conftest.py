@@ -37,10 +37,18 @@ def base_url(load_env):
 
 
 @pytest.fixture(scope="session")
-def auth_token(base_url):
+def auth_credentials(load_env):
+    """Return (username, password) from environment."""
+    return (
+        os.getenv("AUTH_USERNAME", "admin"),
+        os.getenv("AUTH_PASSWORD", "password123"),
+    )
+
+
+@pytest.fixture(scope="session")
+def auth_token(base_url, auth_credentials):
     """Authenticate once for the entire test session — avoids repeated /auth calls."""
-    username = os.getenv("AUTH_USERNAME", "admin")
-    password = os.getenv("AUTH_PASSWORD", "password123")
+    username, password = auth_credentials
     client = BookingClient(base_url)
     response = client.create_token(username, password)
     assert response.status_code == 200, f"Auth failed: {response.text}"
@@ -48,9 +56,15 @@ def auth_token(base_url):
 
 
 @pytest.fixture(scope="session")
-def client(base_url, auth_token):
-    """Authenticated client shared across all tests in the session."""
-    return BookingClient(base_url, token=auth_token)
+def client(base_url, auth_token, auth_credentials):
+    """Authenticated client with self-healing token refresh.
+
+    Passes credentials so the client can re-authenticate on 403.
+    """
+    username, password = auth_credentials
+    return BookingClient(
+        base_url, token=auth_token, username=username, password=password,
+    )
 
 
 @pytest.fixture(scope="session")

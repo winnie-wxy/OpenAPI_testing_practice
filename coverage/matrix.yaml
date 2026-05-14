@@ -284,6 +284,89 @@ requirements:
         ci_job: regression
     status: covered
 
+  # --- Self-Healing Requirements ---
+
+  SH-001:
+    description: "Client retries on 5xx/429 with exponential backoff"
+    priority: P2
+    tests:
+      - file: tests/nonfunctional/test_self_healing.py
+        function: TestAutoRetry::test_retries_on_500_then_succeeds
+        ci_job: nonfunctional
+      - file: tests/nonfunctional/test_self_healing.py
+        function: TestAutoRetry::test_retries_on_429_rate_limit
+        ci_job: nonfunctional
+      - file: tests/nonfunctional/test_self_healing.py
+        function: TestAutoRetry::test_retries_on_502_503_504
+        ci_job: nonfunctional
+      - file: tests/nonfunctional/test_self_healing.py
+        function: TestAutoRetry::test_returns_last_response_after_max_retries
+        ci_job: nonfunctional
+      - file: tests/nonfunctional/test_self_healing.py
+        function: TestAutoRetry::test_no_retry_on_4xx
+        ci_job: nonfunctional
+      - file: tests/nonfunctional/test_self_healing.py
+        function: TestAutoRetry::test_exponential_backoff_timing
+        ci_job: nonfunctional
+      - file: tests/nonfunctional/test_self_healing.py
+        function: TestAutoRetry::test_retries_on_connection_error
+        ci_job: nonfunctional
+      - file: tests/nonfunctional/test_self_healing.py
+        function: TestAutoRetry::test_connection_error_raises_after_max_retries
+        ci_job: nonfunctional
+    status: covered
+
+  SH-002:
+    description: "Client refreshes auth token on 403 for mutating operations"
+    priority: P1
+    tests:
+      - file: tests/nonfunctional/test_self_healing.py
+        function: TestTokenRefresh::test_refreshes_token_on_403_for_put
+        ci_job: nonfunctional
+      - file: tests/nonfunctional/test_self_healing.py
+        function: TestTokenRefresh::test_refreshes_token_on_403_for_delete
+        ci_job: nonfunctional
+      - file: tests/nonfunctional/test_self_healing.py
+        function: TestTokenRefresh::test_no_refresh_on_403_for_get
+        ci_job: nonfunctional
+      - file: tests/nonfunctional/test_self_healing.py
+        function: TestTokenRefresh::test_no_refresh_without_credentials
+        ci_job: nonfunctional
+      - file: tests/nonfunctional/test_self_healing.py
+        function: TestTokenRefresh::test_refresh_only_attempted_once
+        ci_job: nonfunctional
+    status: covered
+
+  SH-003:
+    description: "Pydantic models tolerate unexpected fields (schema forward-compat)"
+    priority: P2
+    tests:
+      - file: tests/nonfunctional/test_self_healing.py
+        function: TestSchemaTolerance::test_booking_ignores_extra_fields
+        ci_job: nonfunctional
+      - file: tests/nonfunctional/test_self_healing.py
+        function: TestSchemaTolerance::test_booking_response_ignores_extra_fields
+        ci_job: nonfunctional
+      - file: tests/nonfunctional/test_self_healing.py
+        function: TestSchemaTolerance::test_booking_dates_ignores_extra_fields
+        ci_job: nonfunctional
+      - file: tests/nonfunctional/test_self_healing.py
+        function: TestSchemaTolerance::test_missing_required_field_still_fails
+        ci_job: nonfunctional
+    status: covered
+
+  SH-004:
+    description: "Stale data detection via precondition checks"
+    priority: P2
+    tests:
+      - file: tests/nonfunctional/test_self_healing.py
+        function: TestStaleDataDetection::test_verify_booking_exists_before_update
+        ci_job: nonfunctional
+      - file: tests/nonfunctional/test_self_healing.py
+        function: TestStaleDataDetection::test_detect_stale_booking_after_delete
+        ci_job: nonfunctional
+    status: covered
+
   # --- Known Gaps (requirements without test coverage) ---
 
   GAP-001:
