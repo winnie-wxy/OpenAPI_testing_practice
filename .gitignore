@@ -6,3 +6,7 @@ venv/
 reports/
 *.egg-info/
 coverage/coherency_report.json
+
+# Interview prep (personal, not part of project)
+docs/*interview*
+docs/*prep*
