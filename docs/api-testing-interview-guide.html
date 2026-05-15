@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Testing Interview Guide — Winnie Wei</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.6; max-width: 900px; margin: 0 auto; padding: 40px 32px; }
+  h1 { font-size: 2em; font-weight: 700; margin-bottom: 8px; color: #0f172a; }
+  h2 { font-size: 1.5em; font-weight: 700; color: #0f172a; margin-top: 40px; margin-bottom: 16px; padding-bottom: 6px; border-bottom: 2px solid #e2e8f0; }
+  h3 { font-size: 1.15em; font-weight: 600; color: #334155; margin-top: 24px; margin-bottom: 8px; }
+  h4 { font-size: 1em; font-weight: 600; color: #475569; margin-top: 16px; margin-bottom: 6px; }
+  p { margin-bottom: 10px; color: #334155; }
+  .subtitle { color: #64748b; font-size: 1.05em; margin-bottom: 24px; }
+  ul, ol { margin-left: 20px; margin-bottom: 12px; }
+  li { margin-bottom: 4px; color: #334155; }
+  strong { color: #0f172a; }
+  code { background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.9em; color: #0369a1; }
+  pre { background: #1e293b; color: #e2e8f0; padding: 16px 20px; border-radius: 8px; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.85em; overflow-x: auto; margin: 12px 0; line-height: 1.5; }
+  pre code { background: none; padding: 0; color: inherit; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 20px; font-size: 0.95em; }
+  th { text-align: left; padding: 10px 12px; background: #1e293b; color: #f8fafc; font-weight: 600; }
+  td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; }
+  tr:nth-child(even) td { background: #f1f5f9; }
+  .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; margin: 12px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .card h3 { margin-top: 0; }
+  .grid { display: grid; gap: 16px; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 4px; font-size: 0.8em; font-weight: 600; margin: 2px; }
+  .tag-blue { background: #dbeafe; color: #1d4ed8; }
+  .tag-green { background: #dcfce7; color: #15803d; }
+  .tag-yellow { background: #fef9c3; color: #a16207; }
+  .tag-red { background: #fee2e2; color: #dc2626; }
+  .tag-purple { background: #f3e8ff; color: #7c3aed; }
+  .quote { border-left: 4px solid #0ea5e9; padding: 12px 20px; margin: 16px 0; background: #f0f9ff; border-radius: 0 8px 8px 0; font-style: italic; color: #0c4a6e; }
+  .qa { margin: 16px 0; }
+  .qa .q { font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+  .qa .a { color: #334155; padding-left: 16px; border-left: 3px solid #e2e8f0; margin-bottom: 16px; }
+  .section-tag { display: inline-block; background: #0ea5e9; color: #fff; padding: 2px 10px; border-radius: 4px; font-size: 0.75em; font-weight: 600; margin-left: 8px; vertical-align: middle; }
+  .toc { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 24px; margin: 24px 0; }
+  .toc a { color: #0369a1; text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc li { margin-bottom: 6px; }
+  .page-break { page-break-before: always; }
+  @media print {
+    body { max-width: 100%; padding: 20px; font-size: 11pt; }
+    .card { break-inside: avoid; }
+    pre { font-size: 9pt; }
+    h2 { page-break-before: always; }
+    h2:first-of-type { page-break-before: avoid; }
+  }
+  @media (max-width: 700px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    body { padding: 20px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>API Testing Interview Guide</h1>
+<p class="subtitle">Winnie Wei &middot; Lead Software Test Engineer &middot; Cover Genius Interview Prep</p>
+<p style="color:#64748b; font-size:0.9em;">Combines general API testing theory + project-specific patterns from the CoverG pytest suite (60 tests, 4 layers, CI/CD pipeline, self-healing client, coherency checks).</p>
+
+<div class="toc">
+<strong>Contents</strong>
+<ol>
+  <li><a href="#s1">API Types & Protocols</a></li>
+  <li><a href="#s2">HTTP Status Codes</a></li>
+  <li><a href="#s3">Authentication & Authorization</a></li>
+  <li><a href="#s4">API Communication Patterns</a></li>
+  <li><a href="#s5">Test Architecture & Strategy</a></li>
+  <li><a href="#s6">pytest Patterns for API Testing</a></li>
+  <li><a href="#s7">Self-Healing Test Patterns</a></li>
+  <li><a href="#s8">Flaky Test Debugging</a></li>
+  <li><a href="#s9">CI/CD Pipeline Design</a></li>
+  <li><a href="#s10">Key API Concepts</a></li>
+  <li><a href="#s11">Coherency Check System</a></li>
+  <li><a href="#s12">AI-Driven QA</a></li>
+  <li><a href="#s13">Interview Q&A</a></li>
+  <li><a href="#s14">Cover Genius — What I'd Build</a></li>
+  <li><a href="#s15">Quick Reference Card</a></li>
+</ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. API Types & Protocols</h2>
+
+<table>
+<tr><th>Type</th><th>Protocol</th><th>Data Format</th><th>Use Case</th></tr>
+<tr><td><strong>REST</strong></td><td>HTTP/HTTPS</td><td>JSON (usually)</td><td>Web/mobile backends, microservices, public APIs</td></tr>
+<tr><td><strong>SOAP</strong></td><td>HTTP/SMTP</td><td>XML</td><td>Enterprise, banking, legacy integrations</td></tr>
+<tr><td><strong>GraphQL</strong></td><td>HTTP</td><td>JSON</td><td>Complex client-driven queries, mobile-optimised</td></tr>
+<tr><td><strong>gRPC</strong></td><td>HTTP/2</td><td>Protobuf (binary)</td><td>Internal microservices, low-latency, streaming</td></tr>
+<tr><td><strong>WebSocket</strong></td><td>WS/WSS</td><td>Any</td><td>Real-time: chat, live updates, dashboards</td></tr>
+</table>
+
+<h3>REST vs GraphQL vs gRPC — Testing Implications</h3>
+<table>
+<tr><th>Aspect</th><th>REST</th><th>GraphQL</th><th>gRPC</th></tr>
+<tr><td>Contract testing</td><td>OpenAPI/Swagger schema</td><td>Schema introspection</td><td>Proto file validation</td></tr>
+<tr><td>Test tooling</td><td>Postman, pytest+requests</td><td>GraphiQL, pytest+gql</td><td>grpcurl, pytest+grpc</td></tr>
+<tr><td>Error handling</td><td>HTTP status codes</td><td>Always 200, errors in body</td><td>gRPC status codes</td></tr>
+<tr><td>Versioning</td><td>URL or header versioning</td><td>Schema evolution</td><td>Proto backward compat</td></tr>
+</table>
+
+<div class="quote">CoverG project: REST API (Restful Booker) tested with pytest + requests. Contract validation via Pydantic models. The same layered approach works for GraphQL/gRPC — only the client layer changes.</div>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. HTTP Status Codes</h2>
+
+<div class="grid grid-2">
+<div class="card">
+<h3>Success (2xx)</h3>
+<table>
+<tr><td><code>200</code></td><td>OK — standard success</td></tr>
+<tr><td><code>201</code></td><td>Created — resource created</td></tr>
+<tr><td><code>204</code></td><td>No Content — success, empty body</td></tr>
+</table>
+</div>
+<div class="card">
+<h3>Redirection (3xx)</h3>
+<table>
+<tr><td><code>301</code></td><td>Moved Permanently</td></tr>
+<tr><td><code>302</code></td><td>Found (temporary redirect)</td></tr>
+<tr><td><code>304</code></td><td>Not Modified (cache hit)</td></tr>
+</table>
+</div>
+<div class="card">
+<h3>Client Error (4xx)</h3>
+<table>
+<tr><td><code>400</code></td><td>Bad Request — invalid input</td></tr>
+<tr><td><code>401</code></td><td>Unauthorized — no/invalid credentials</td></tr>
+<tr><td><code>403</code></td><td>Forbidden — authenticated but not allowed</td></tr>
+<tr><td><code>404</code></td><td>Not Found</td></tr>
+<tr><td><code>405</code></td><td>Method Not Allowed</td></tr>
+<tr><td><code>409</code></td><td>Conflict — duplicate/state conflict</td></tr>
+<tr><td><code>422</code></td><td>Unprocessable Entity — validation failed</td></tr>
+<tr><td><code>429</code></td><td>Too Many Requests — rate limited</td></tr>
+</table>
+</div>
+<div class="card">
+<h3>Server Error (5xx)</h3>
+<table>
+<tr><td><code>500</code></td><td>Internal Server Error</td></tr>
+<tr><td><code>502</code></td><td>Bad Gateway</td></tr>
+<tr><td><code>503</code></td><td>Service Unavailable</td></tr>
+<tr><td><code>504</code></td><td>Gateway Timeout</td></tr>
+</table>
+</div>
+</div>
+
+<div class="quote">CoverG tests: Smoke tests assert 200/201, negative tests assert 403/404, security tests verify no 500 on malicious payloads, self-healing client auto-retries on 429/5xx.</div>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. Authentication & Authorization</h2>
+
+<table>
+<tr><th>Method</th><th>How It Works</th><th>Security Level</th><th>Testing Notes</th></tr>
+<tr>
+  <td><strong>Basic Auth</strong></td>
+  <td><code>Authorization: Basic base64(user:pass)</code></td>
+  <td><span class="tag tag-red">Low</span></td>
+  <td>Test with invalid/empty/missing credentials</td>
+</tr>
+<tr>
+  <td><strong>API Key</strong></td>
+  <td>Key in header, query param, or cookie</td>
+  <td><span class="tag tag-yellow">Medium</span></td>
+  <td>Test key rotation, revoked keys, rate limits per key</td>
+</tr>
+<tr>
+  <td><strong>Bearer Token (JWT)</strong></td>
+  <td><code>Authorization: Bearer &lt;token&gt;</code></td>
+  <td><span class="tag tag-green">High</span></td>
+  <td>Test expired tokens, tampered payload, missing claims</td>
+</tr>
+<tr>
+  <td><strong>OAuth 2.0</strong></td>
+  <td>Authorization code / client credentials flow</td>
+  <td><span class="tag tag-green">High</span></td>
+  <td>Test scope enforcement, token refresh, PKCE for public clients</td>
+</tr>
+<tr>
+  <td><strong>HMAC Signature</strong></td>
+  <td>Sign request with shared secret</td>
+  <td><span class="tag tag-green">High</span></td>
+  <td>Test tampered signatures, replay attacks, timestamp drift</td>
+</tr>
+</table>
+
+<h3>CoverG Auth Pattern</h3>
+<pre><code># Session-scoped: one auth call per test run
+@pytest.fixture(scope="session")
+def auth_token(base_url, auth_credentials):
+    username, password = auth_credentials
+    client = BookingClient(base_url)
+    response = client.create_token(username, password)
+    return response.json()["token"]
+
+# Client with self-healing token refresh
+@pytest.fixture(scope="session")
+def client(base_url, auth_token, auth_credentials):
+    username, password = auth_credentials
+    return BookingClient(
+        base_url, token=auth_token,
+        username=username, password=password,  # enables auto-refresh on 403
+    )</code></pre>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. API Communication Patterns</h2>
+
+<div class="grid grid-3">
+<div class="card">
+<h3>Polling</h3>
+<p>Client repeatedly checks for updates at intervals.</p>
+<ul>
+<li>Simple to implement</li>
+<li>Wastes bandwidth</li>
+<li>Latency = poll interval</li>
+</ul>
+<p><span class="tag tag-blue">Use case:</span> CI status checks</p>
+</div>
+<div class="card">
+<h3>Webhooks</h3>
+<p>Server pushes updates to a registered callback URL.</p>
+<ul>
+<li>Real-time, efficient</li>
+<li>Harder to test (need listener)</li>
+<li>Delivery guarantees matter</li>
+</ul>
+<p><span class="tag tag-blue">Use case:</span> Payment notifications</p>
+</div>
+<div class="card">
+<h3>Event-Driven</h3>
+<p>Message broker (Kafka, RabbitMQ) decouples producers and consumers.</p>
+<ul>
+<li>Async, scalable</li>
+<li>Test ordering, replay, dead-letter</li>
+<li>Schema registry for contracts</li>
+</ul>
+<p><span class="tag tag-blue">Use case:</span> Claims pipeline</p>
+</div>
+</div>
+
+<h3>Testing Each Pattern</h3>
+<table>
+<tr><th>Pattern</th><th>What to Test</th><th>Key Challenges</th></tr>
+<tr><td>Polling</td><td>Timeout, frequency, data freshness</td><td>Eventual consistency, race conditions</td></tr>
+<tr><td>Webhooks</td><td>Delivery, retries, idempotency, signature validation</td><td>Need mock receiver, ordering</td></tr>
+<tr><td>Events</td><td>Message schema, ordering, dead-letter, replay</td><td>Async timing, consumer lag</td></tr>
+</table>
+
+<div class="quote">CoverG: Polling pattern used in flaky test fix — <code>test_create_and_verify_with_polling</code> retries GET with backoff instead of assuming immediate consistency. Webhook delivery is a documented P1 gap (API doesn't support it).</div>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. Test Architecture & Strategy</h2>
+
+<h3>Four-Layer API Test Architecture</h3>
+<table>
+<tr><th>Layer</th><th>Purpose</th><th>CoverG Count</th><th>CI Stage</th></tr>
+<tr>
+  <td><span class="tag tag-green">Smoke</span></td>
+  <td>Is the API alive? Auth works? Basic CRUD?</td>
+  <td>6 tests</td>
+  <td>Gate (blocks all)</td>
+</tr>
+<tr>
+  <td><span class="tag tag-blue">Regression</span></td>
+  <td>Full lifecycle, negative cases, data variations, filtering</td>
+  <td>15 tests</td>
+  <td>Gate (blocks NFR)</td>
+</tr>
+<tr>
+  <td><span class="tag tag-purple">Contract</span></td>
+  <td>Pydantic schema validation — catches field drift</td>
+  <td>3 tests</td>
+  <td>With regression</td>
+</tr>
+<tr>
+  <td><span class="tag tag-yellow">Non-Functional</span></td>
+  <td>Performance P95, concurrency, security, resilience, self-healing</td>
+  <td>36 tests</td>
+  <td>Final stage</td>
+</tr>
+</table>
+
+<h3>Test Design Strategy</h3>
+<div class="grid grid-2">
+<div class="card">
+<h3>What to Test</h3>
+<ul>
+<li><strong>Happy path</strong> — standard CRUD success</li>
+<li><strong>Negative cases</strong> — invalid input, missing auth, not found</li>
+<li><strong>Boundary values</strong> — empty strings, max lengths, zero</li>
+<li><strong>Data variations</strong> — unicode, special chars, apostrophes</li>
+<li><strong>Concurrency</strong> — parallel writes, read-under-write</li>
+<li><strong>Security</strong> — injection, auth bypass, oversized payloads</li>
+</ul>
+</div>
+<div class="card">
+<h3>What NOT to Test (in API tests)</h3>
+<ul>
+<li>UI rendering or browser behaviour</li>
+<li>Database internals (test via API contracts)</li>
+<li>Third-party API internals (mock at boundary)</li>
+<li>Implementation details (test behaviour, not code)</li>
+<li>Exhaustive combinations (use risk-based priority)</li>
+</ul>
+</div>
+</div>
+
+<h3>Data-Driven Testing</h3>
+<pre><code># Parametrized test with meaningful IDs
+@pytest.mark.parametrize("payload, expected_status", [
+    pytest.param({"firstname": "Jim"}, 200, id="valid_name"),
+    pytest.param({"firstname": "O'Brien"}, 200, id="apostrophe"),
+    pytest.param({"firstname": ""}, 500, id="empty_string"),
+], ids=str)
+def test_create_booking_variations(client, payload, expected_status):
+    response = client.create_booking(build_booking_payload(**payload))
+    assert response.status_code == expected_status</code></pre>
+
+<pre><code># Dynamic schema validation with Pydantic
+from pydantic import BaseModel, ConfigDict
+
+class Booking(BaseModel):
+    model_config = ConfigDict(extra="allow")  # tolerates new fields
+    firstname: str
+    lastname: str
+    totalprice: int
+    depositpaid: bool
+    bookingdates: BookingDates
+    additionalneeds: str | None = None
+
+# In test:
+booking = Booking(**response.json())  # raises ValidationError on schema mismatch</code></pre>
+
+<!-- ============================================================ -->
+<h2 id="s6">6. pytest Patterns for API Testing</h2>
+
+<h3>Fixture Hierarchy</h3>
+<table>
+<tr><th>Scope</th><th>Use For</th><th>CoverG Example</th></tr>
+<tr><td><code>session</code></td><td>Auth token, API client (expensive setup)</td><td><code>auth_token</code>, <code>client</code></td></tr>
+<tr><td><code>module</code></td><td>Shared test data per file</td><td>—</td></tr>
+<tr><td><code>class</code></td><td>Shared state within a test class</td><td>—</td></tr>
+<tr><td><code>function</code></td><td>Per-test isolation (default)</td><td><code>created_booking</code> (yield fixture)</td></tr>
+</table>
+
+<h3>Yield Fixtures — Guaranteed Cleanup</h3>
+<pre><code>@pytest.fixture
+def created_booking(client):
+    payload = build_booking_payload()
+    response = client.create_booking(payload)
+    booking_id = response.json()["bookingid"]
+    yield booking_id, payload          # test runs here
+    client.delete_booking(booking_id)  # cleanup runs even on failure</code></pre>
+
+<h3>Factory Fixtures — Flexible Setup</h3>
+<pre><code>@pytest.fixture
+def make_booking(client):
+    created_ids = []
+    def _make(**overrides):
+        payload = build_booking_payload(**overrides)
+        booking_id = client.create_booking(payload).json()["bookingid"]
+        created_ids.append(booking_id)
+        return booking_id, payload
+    yield _make
+    for bid in created_ids:
+        client.delete_booking(bid)</code></pre>
+
+<h3>Markers & Selective Execution</h3>
+<pre><code># pytest.ini
+[pytest]
+markers =
+    smoke: Quick health and basic CRUD checks
+    regression: Full coverage including edge cases
+    contract: Response schema validation tests
+    nonfunctional: Performance, security, resilience
+
+# Run by layer:
+pytest -m smoke                    # gate check
+pytest -m "regression or contract" # full regression
+pytest -m nonfunctional            # performance + security</code></pre>
+
+<h3>Key Plugins</h3>
+<table>
+<tr><th>Plugin</th><th>Purpose</th><th>Config</th></tr>
+<tr><td><code>pytest-xdist</code></td><td>Parallel execution</td><td><code>-n auto</code></td></tr>
+<tr><td><code>pytest-rerunfailures</code></td><td>Flake safety net</td><td><code>--reruns 2</code></td></tr>
+<tr><td><code>pytest-timeout</code></td><td>Kill hung tests</td><td><code>--timeout=30</code></td></tr>
+<tr><td><code>pytest-html</code></td><td>HTML reports</td><td><code>--html=reports/report.html</code></td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="s7">7. Self-Healing Test Patterns <span class="section-tag">NEW</span></h2>
+
+<p>Self-healing patterns make tests resilient to transient failures without hiding real bugs.</p>
+
+<div class="grid grid-2">
+<div class="card">
+<h3>Auto-Retry with Backoff</h3>
+<p>Client retries on 5xx/429/ConnectionError with exponential backoff. Does NOT retry 4xx (real failures).</p>
+<pre><code># Retryable: 429, 500, 502, 503, 504
+# Backoff: 0.5s, 1s, 2s (configurable)
+# Max retries: 3 (configurable)
+client = BookingClient(
+    base_url,
+    max_retries=3,
+    backoff_base=0.5,
+)</code></pre>
+<p><strong>8 tests</strong> verify retry, exhaustion, backoff timing, non-retry on 4xx.</p>
+</div>
+<div class="card">
+<h3>Token Refresh on 403</h3>
+<p>When a PUT/PATCH/DELETE gets 403, client re-authenticates and retries once. Does NOT refresh on GET (403 on GET = real auth issue).</p>
+<pre><code># Token refresh is "free" —
+# doesn't consume retry budget
+client = BookingClient(
+    base_url, token=auth_token,
+    username="admin",
+    password="password123",
+)</code></pre>
+<p><strong>5 tests</strong> verify refresh, skip on GET, no-creds guard, single-attempt limit.</p>
+</div>
+<div class="card">
+<h3>Schema Tolerance</h3>
+<p>Pydantic models use <code>extra="allow"</code> — tolerates new fields from API changes without breaking existing assertions.</p>
+<pre><code>class Booking(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    firstname: str  # required fields
+    # ... new fields accepted silently</code></pre>
+<p><strong>4 tests</strong> verify extra fields accepted, required fields still enforced.</p>
+</div>
+<div class="card">
+<h3>Stale Data Detection</h3>
+<p>Precondition checks verify data exists before asserting on it. Catches phantom passes from eventual consistency.</p>
+<pre><code># Verify booking exists BEFORE update
+get_resp = client.get_booking(booking_id)
+assert get_resp.status_code == 200, \
+    f"Precondition: booking {booking_id} missing"
+# Now safe to update
+update_resp = client.update_booking(...)</code></pre>
+<p><strong>2 tests</strong> verify preconditions and post-deletion staleness.</p>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s8">8. Flaky Test Debugging</h2>
+
+<p>Git history tells the story: introduce anti-patterns &rarr; diagnose &rarr; fix.</p>
+
+<table>
+<tr><th>Anti-Pattern</th><th>Why It Flakes</th><th>Fix</th></tr>
+<tr>
+  <td><span class="tag tag-red">Race Condition</span><br>Create &rarr; immediate GET</td>
+  <td>Eventual consistency — data not queryable yet</td>
+  <td>Retry/poll with backoff</td>
+</tr>
+<tr>
+  <td><span class="tag tag-red">Shared State</span><br>Module-level global variable</td>
+  <td>Breaks with parallel execution or random order</td>
+  <td>Per-test fixture isolation</td>
+</tr>
+<tr>
+  <td><span class="tag tag-red">Timing Assertion</span><br><code>assert elapsed < 500ms</code></td>
+  <td>Network jitter, CI runner contention</td>
+  <td>Multi-sample P95 statistical approach</td>
+</tr>
+</table>
+
+<div class="quote">"Reruns are a safety net, not a solution. If a test reruns in >20% of builds, it needs fixing — not more reruns. I track rerun rate as a quality signal."</div>
+
+<h3>Debugging Workflow</h3>
+<ol>
+<li><strong>Reproduce:</strong> <code>pytest --count=10 -x tests/path/to_test.py</code> (run 10x, stop on first fail)</li>
+<li><strong>Isolate:</strong> <code>pytest -k "test_name" --no-header -rN</code> (single test, minimal output)</li>
+<li><strong>Check parallelism:</strong> <code>pytest -n 4 --dist=loadfile</code> (does it only fail in parallel?)</li>
+<li><strong>Check ordering:</strong> <code>pytest -p randomly</code> (does it only fail in certain order?)</li>
+<li><strong>Root cause:</strong> Usually shared state, timing, or external dependency</li>
+<li><strong>Fix + verify:</strong> Run 20x in CI to confirm stability</li>
+</ol>
+
+<!-- ============================================================ -->
+<h2 id="s9">9. CI/CD Pipeline Design</h2>
+
+<h3>Three-Stage Gated Pipeline</h3>
+<div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:16px 0; font-size:0.95em;">
+  <div style="background:#dcfce7; border:2px solid #22c55e; border-radius:8px; padding:12px 20px; text-align:center;">
+    <strong>Smoke</strong><br><span style="color:#64748b; font-size:0.85em;">Gate &middot; 6 tests</span>
+  </div>
+  <span style="color:#22c55e; font-size:1.5em;">&rarr;</span>
+  <div style="background:#dbeafe; border:2px solid #3b82f6; border-radius:8px; padding:12px 20px; text-align:center;">
+    <strong>Regression</strong><br><span style="color:#64748b; font-size:0.85em;">+ Contract &middot; 18 tests</span>
+  </div>
+  <span style="color:#3b82f6; font-size:1.5em;">&rarr;</span>
+  <div style="background:#fef9c3; border:2px solid #eab308; border-radius:8px; padding:12px 20px; text-align:center;">
+    <strong>Non-Functional</strong><br><span style="color:#64748b; font-size:0.85em;">Perf + Security &middot; 36 tests</span>
+  </div>
+  <span style="color:#94a3b8; font-size:1.5em;">&rarr;</span>
+  <div style="background:#f1f5f9; border:2px solid #cbd5e1; border-radius:8px; padding:12px 20px; text-align:center;">
+    <strong>Coherency</strong><br><span style="color:#64748b; font-size:0.85em;">Coverage gaps</span>
+  </div>
+  <span style="color:#94a3b8; font-size:1.5em;">&rarr;</span>
+  <div style="background:#f1f5f9; border:2px solid #cbd5e1; border-radius:8px; padding:12px 20px; text-align:center;">
+    <strong>Report</strong><br><span style="color:#64748b; font-size:0.85em;">PR comments</span>
+  </div>
+</div>
+
+<div class="grid grid-3">
+<div class="card">
+<h4>Speed</h4>
+<ul>
+<li>Parallel: <code>-n auto</code></li>
+<li>Pip caching</li>
+<li>Smoke gates everything</li>
+</ul>
+</div>
+<div class="card">
+<h4>Reliability</h4>
+<ul>
+<li>Flake retry: <code>--reruns 2</code></li>
+<li>Timeout: <code>--timeout=30</code></li>
+<li><code>--strict-markers</code></li>
+</ul>
+</div>
+<div class="card">
+<h4>Observability</h4>
+<ul>
+<li>JUnit XML artifacts</li>
+<li>HTML reports</li>
+<li>PR test result comments</li>
+</ul>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s10">10. Key API Testing Concepts</h2>
+
+<table>
+<tr><th>Concept</th><th>What It Is</th><th>What to Test</th></tr>
+<tr>
+  <td><strong>Idempotency</strong></td>
+  <td>Same request N times = same result (GET, PUT, DELETE are idempotent; POST is not)</td>
+  <td>Send duplicate POST — does it create duplicates? Does the API support idempotency keys?</td>
+</tr>
+<tr>
+  <td><strong>Rate Limiting</strong></td>
+  <td>Server limits requests per time window (429 response)</td>
+  <td>Exceed limit, verify 429, check <code>Retry-After</code> header, verify recovery after window</td>
+</tr>
+<tr>
+  <td><strong>Pagination</strong></td>
+  <td>Large result sets returned in pages (offset/limit, cursor, keyset)</td>
+  <td>First/last page, empty page, page size boundary, consistency during writes</td>
+</tr>
+<tr>
+  <td><strong>Versioning</strong></td>
+  <td>URL path (<code>/v2/</code>) or header (<code>Accept: application/vnd.api+json;version=2</code>)</td>
+  <td>Old version still works, new version has new fields, invalid version returns error</td>
+</tr>
+<tr>
+  <td><strong>CORS</strong></td>
+  <td>Browser security: server controls which origins can call the API</td>
+  <td>Preflight OPTIONS, <code>Access-Control-Allow-Origin</code> header, credentials mode</td>
+</tr>
+<tr>
+  <td><strong>Contract Testing</strong></td>
+  <td>API response matches agreed schema (Pydantic, JSON Schema, Pact)</td>
+  <td>Required fields present, types correct, unknown fields handled, breaking changes detected</td>
+</tr>
+<tr>
+  <td><strong>Retry & Backoff</strong></td>
+  <td>Client retries transient failures with increasing delays</td>
+  <td>Retries on 5xx, exponential backoff timing, max retry limit, no retry on 4xx</td>
+</tr>
+</table>
+
+<div class="quote">CoverG known gaps: Idempotency (GAP-002), Rate Limiting (GAP-003), Pagination (GAP-005) — documented with rationale in the coverage matrix rather than pretending they don't exist.</div>
+
+<!-- ============================================================ -->
+<h2 id="s11">11. Coherency Check System</h2>
+
+<p>The most dangerous test suite passes 100% and gives you false confidence. Coherency checks tell you what you're NOT testing.</p>
+
+<div class="grid grid-2">
+<div class="card">
+<h3>Layer 1: Structural (Automated)</h3>
+<p>Python script parses <code>coverage/matrix.yaml</code> and validates against filesystem.</p>
+<pre><code>$ python tools/coherency_check.py
+
+Requirements: 34 total, 29 covered, 5 gaps
+Test mappings: 58
+Violations: 0 errors, 3 warnings
+
+[p1_gap] GAP-001: Webhook delivery
+[p1_gap] GAP-002: Idempotency
+[p1_gap] GAP-004: Multi-tenant isolation</code></pre>
+<p>Checks: covered_without_tests, missing_test_file, missing_test_function, orphaned_test, marker_mismatch, p1_gap</p>
+</div>
+<div class="card">
+<h3>Layer 2: Semantic (AI-Assisted)</h3>
+<p>Claude Code skill analyses actual test code quality:</p>
+<ul>
+<li><strong>Assertion quality</strong> — does the test actually validate intent?</li>
+<li><strong>Negative case coverage</strong> — P1 reqs have both happy + failure paths?</li>
+<li><strong>Contract drift</strong> — Pydantic model vs live API shape</li>
+<li><strong>Data isolation</strong> — no shared state, no order dependency</li>
+</ul>
+<p>Invoked via <code>/test-coherency</code> skill.</p>
+</div>
+</div>
+
+<h3>Coverage Matrix (Single Source of Truth)</h3>
+<pre><code># coverage/matrix.yaml
+requirements:
+  REQ-001:
+    description: "Health check endpoint returns status 201"
+    priority: P1
+    tests:
+      - file: tests/smoke/test_health.py
+        function: TestHealthCheck::test_ping_returns_201
+        ci_job: smoke
+    status: covered    # covered | gap | partial | stale
+
+  GAP-001:
+    description: "Webhook delivery for booking status changes"
+    priority: P1
+    tests: []
+    status: gap
+    notes: "API does not support webhooks — future feature"</code></pre>
+
+<!-- ============================================================ -->
+<h2 id="s12">12. AI-Driven QA</h2>
+
+<div class="grid grid-2">
+<div class="card">
+<h3>What AI Does</h3>
+<ul>
+<li><strong>Requirements &rarr; Test Specs</strong> — parse Jira/specs, derive scenarios with traceability</li>
+<li><strong>Test Code Generation</strong> — follows existing patterns (fixtures, factories, markers)</li>
+<li><strong>Coherency Checking</strong> — semantic review of test quality</li>
+<li><strong>Code Review</strong> — flag flaky patterns, missing cleanup, weak assertions</li>
+</ul>
+</div>
+<div class="card">
+<h3>What Humans Do</h3>
+<ul>
+<li><strong>Risk prioritisation</strong> — which P1 gaps matter most?</li>
+<li><strong>Coverage scope</strong> — what NOT to test</li>
+<li><strong>Domain judgment</strong> — insurance-specific edge cases</li>
+<li><strong>Strategy</strong> — test architecture decisions</li>
+</ul>
+</div>
+</div>
+
+<div class="quote">"I've built 20+ custom AI skills for test engineering — test plans from Jira Epics, Jira card creation, coherency checking. AI accelerates the systematic work. The engineer makes the judgment calls."</div>
+
+<h3>AI Workflow in Practice</h3>
+<ol>
+<li><strong>Requirements analysis:</strong> Feed Jira Epic/Confluence spec &rarr; AI generates test scenarios with REQ traceability</li>
+<li><strong>Test generation:</strong> AI writes tests following project patterns (CLAUDE.md enforces conventions)</li>
+<li><strong>Quality review:</strong> AI analyses assertion strength, negative coverage, data isolation</li>
+<li><strong>Gap detection:</strong> Coherency check surfaces untested requirements</li>
+<li><strong>Human review:</strong> Engineer validates, prioritises, makes judgment calls</li>
+</ol>
+
+<!-- ============================================================ -->
+<h2 id="s13">13. Interview Q&A</h2>
+
+<div class="qa">
+<p class="q">Q: How do you decide what to automate vs test manually?</p>
+<div class="a">Automate the regression safety net — things that must pass every release. Manual test for exploratory, new feature validation, and anything involving subjective judgment. The split shifts over time — what starts manual gets automated once the feature stabilises.</div>
+</div>
+
+<div class="qa">
+<p class="q">Q: How do you handle test data in a multi-tenant system?</p>
+<div class="a">Factory pattern with randomised data — each test creates its own tenant, policies, claims. Yield fixtures handle cleanup. No shared state between tests, no ordering dependencies. Essential for parallel execution with <code>pytest-xdist</code>.</div>
+</div>
+
+<div class="qa">
+<p class="q">Q: How do you prioritise what to test with limited resources?</p>
+<div class="a">Risk-based: impact &times; likelihood. P1 is anything that blocks revenue or violates compliance. P2 is customer-facing degradation. P3 is internal tooling. I document gaps explicitly — known untested areas with rationale — rather than pretending everything is covered.</div>
+</div>
+
+<div class="qa">
+<p class="q">Q: Tell me about a time you dealt with flaky tests in CI.</p>
+<div class="a">I have a concrete example in this project. Three anti-patterns: race condition (create &rarr; immediate GET), shared state (module-level variable), single-sample timing assertion. Each has a specific fix: polling with backoff, per-test fixture isolation, multi-sample P95 statistical approach. Reruns are a safety net, not a solution — I track rerun rate as a quality signal.</div>
+</div>
+
+<div class="qa">
+<p class="q">Q: How do you use AI in your QA work?</p>
+<div class="a">Three levels: (1) Code generation — AI writes the boilerplate, I review. (2) Workflow automation — custom skills for test plans, Jira cards, coverage analysis. (3) Strategic analysis — AI analyses requirements and identifies test gaps. The key is human-in-the-loop — AI accelerates, humans validate.</div>
+</div>
+
+<div class="qa">
+<p class="q">Q: How would you onboard a junior test engineer?</p>
+<div class="a">Start with the patterns — show them the project structure, explain why each layer exists. Pair on the first few tests. The flaky test commit history is onboarding material — intentional anti-patterns, then fixes. Graduate to writing tests independently with PR review. CLAUDE.md and skills give guardrails so they follow team patterns.</div>
+</div>
+
+<div class="qa">
+<p class="q">Q: What's your experience with Postman?</p>
+<div class="a">I use Postman for API exploration and debugging — faster than writing a test when investigating behaviour. This project includes a Postman collection mirroring the pytest suite. In a team setting, the collection is the shared reference — anyone can import it and explore the API without the test framework.</div>
+</div>
+
+<div class="qa">
+<p class="q">Q: How do you measure test quality?</p>
+<div class="a">Four signals: (1) Defect escape rate — bugs reaching production despite passing tests. (2) Flake rate — tests needing reruns. (3) Coverage coherency — requirements with no tests (my coherency checker). (4) Time to feedback — how fast CI gives results. Passing tests is table stakes — these metrics tell you if the tests are doing their job.</div>
+</div>
+
+<div class="qa">
+<p class="q">Q: What makes a good API test vs a bad one?</p>
+<div class="a">Good: tests behaviour not implementation, isolated data, meaningful assertions (not just status code), documents what it validates. Bad: depends on execution order, shares state, asserts only <code>response.status_code == 200</code>, no cleanup, hardcoded IDs.</div>
+</div>
+
+<div class="qa">
+<p class="q">Q: How do you handle API versioning in tests?</p>
+<div class="a">Base URL includes version (<code>/v1/</code>, <code>/v2/</code>), configured via environment. Contract tests validate both versions during migration. Schema tolerance (<code>extra="allow"</code> in Pydantic) prevents new fields from breaking existing tests. The coherency checker catches stale tests after API changes.</div>
+</div>
+
+<div class="qa">
+<p class="q">Q: What's your approach to performance testing APIs?</p>
+<div class="a">Multi-sample statistical approach, not single assertions. Take 5-10 samples per endpoint, assert on P95 (not mean/max). Use <code>ThreadPoolExecutor</code> for concurrent load tests — verify no 5xx under 10 concurrent users. Performance baselines per environment, tracked over time. For serious load testing, Locust with proper connection pooling.</div>
+</div>
+
+<div class="qa">
+<p class="q">Q: How do you test microservice dependencies?</p>
+<div class="a">Contract testing at service boundaries — each service validates its schema independently. Mock external dependencies at the API client layer. Integration tests verify actual inter-service communication in staging. Use circuit breaker patterns — test what happens when a dependency is down (resilience tests).</div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s14">14. Cover Genius — What I'd Build</h2>
+
+<div class="grid grid-3">
+<div class="card">
+<h4>Immediate</h4>
+<ul>
+<li>XCover policy lifecycle E2E (quote &rarr; bind &rarr; claim &rarr; settle)</li>
+<li>Partner integration contract tests</li>
+<li>Auth & multi-tenant isolation</li>
+<li>Coherency checking across repos</li>
+</ul>
+</div>
+<div class="card">
+<h4>Scale</h4>
+<ul>
+<li>Multi-currency / locale matrix</li>
+<li>Webhook delivery verification</li>
+<li>Performance baselines per partner</li>
+<li>Claims pipeline E2E</li>
+</ul>
+</div>
+<div class="card">
+<h4>Team</h4>
+<ul>
+<li>AI skills for the whole QA team</li>
+<li>Junior onboarding via patterns</li>
+<li>Coverage gap dashboards</li>
+<li>Flake rate tracking & SLAs</li>
+</ul>
+</div>
+</div>
+
+<p style="margin-top:16px; color:#64748b;">The patterns scale — 60+ countries, 50+ currencies, N partner integrations. The architecture stays the same: layered tests, coherency checks, AI-assisted workflows.</p>
+
+<!-- ============================================================ -->
+<h2 id="s15">15. Quick Reference Card</h2>
+
+<div class="grid grid-2">
+<div class="card">
+<h4>Run Commands</h4>
+<pre><code># By layer
+pytest -m smoke
+pytest -m "regression or contract"
+pytest -m nonfunctional
+
+# Parallel + reruns (CI mode)
+pytest -n auto --reruns 2
+
+# Single test debugging
+pytest -k "test_name" -x -v
+
+# Coherency check
+python tools/coherency_check.py</code></pre>
+</div>
+<div class="card">
+<h4>Project Structure</h4>
+<pre><code>src/
+  api/booking_client.py    # self-healing client
+  models/booking.py        # Pydantic contracts
+  utils/data_factory.py    # randomised test data
+tests/
+  conftest.py              # fixtures + env config
+  smoke/                   # 6 gate tests
+  regression/              # 15 lifecycle + negative
+  contract/                # 3 schema tests
+  nonfunctional/           # 36 perf + security
+coverage/matrix.yaml       # traceability matrix
+tools/coherency_check.py   # gap detection</code></pre>
+</div>
+</div>
+
+<div class="card" style="margin-top:16px;">
+<h4>Key Numbers</h4>
+<table>
+<tr><td><strong>Total tests</strong></td><td>60</td><td><strong>Requirements tracked</strong></td><td>34</td></tr>
+<tr><td><strong>Test layers</strong></td><td>4</td><td><strong>Covered</strong></td><td>29</td></tr>
+<tr><td><strong>CI stages</strong></td><td>3 gated + 2 parallel</td><td><strong>Known gaps</strong></td><td>5 (documented)</td></tr>
+<tr><td><strong>Self-healing tests</strong></td><td>19</td><td><strong>Coherency violations</strong></td><td>0 errors</td></tr>
+</table>
+</div>
+
+<p style="margin-top:32px; text-align:center; color:#94a3b8; font-size:0.85em;">
+  Winnie Wei &middot; API Testing Interview Guide &middot; CoverG Project<br>
+  github.com/winnie-wxy/OpenAPI_testing_practice
+</p>
+
+</body>
+</html>
